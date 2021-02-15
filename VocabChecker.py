@@ -30,10 +30,11 @@ def get_target_vocab(df_column):
 
 def preprocess_input_vocab(input_df):
     # print(input_df.shape)
+    # TODO handle non-standard format
     input_df = input_df.dropna(subset=['COLUMN BUSINESS NAME'])
     # print(input_df.shape)
     # Standardize and add a column with the standardized names
-    # SettingWithCopyWarning
+    # TODO SettingWithCopyWarning
     input_df['ColumnNameStd'] = input_df['COLUMN BUSINESS NAME'].str.title()
     # also gives the warning. leaving as comment because lambda is handy
     # input_df['ColumnNameStd'] = input_df['COLUMN BUSINESS NAME'].apply(lambda x: x.title())
