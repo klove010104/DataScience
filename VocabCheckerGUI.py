@@ -7,7 +7,9 @@ Purpose:
         run the vocab builder
         save the results
         exit
-        
+ 
+TODO: allow user to specify standard vocab file
+
 Created on Sun Feb 14 13:15:59 2021
 
 @author: klove
