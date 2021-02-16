@@ -1,31 +1,34 @@
 # -*- coding: utf-8 -*-
-"""
-Purpose:
-    Allow user to 
-        select a file
-        specify threshold and max number of matches
-        run the vocab builder
-        save the results
-        exit
- 
-TODO: allow user to specify standard vocab file
+"""Call Vocab Checker to check a list of terms against a standard vocabulary.
+
+This module allows the user to specify via GUI the input file, threshold, and 
+max matches for comparing to the standard vocabulary. Note the standard 
+vocabulary is obfuscated in the controller class VocabChecker.
+
+  input file 
+      Excel file with columns 'Table Name' and 'Column Name'
+      rows with blank Column Names will be skipped
+  output file
+      Excel file in the same directory as the input file
 
 Created on Sun Feb 14 13:15:59 2021
 
 @author: klove
 """
+
+import os
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from tkinter.constants import LEFT, RIGHT
-import VocabChecker as vm
-import os
+import VocabChecker
 
 WORKING_DIRECTORY = "./"
 RESULT_FILE_NAME = 'Matched_Vocab.xlsx'
-
-
-# Returns the fully qualified file name that the user selects
+ 
 def get_file_name():
+    """Returns the fully qualified file name that the user selects.
+    
+    """
     file_name = askopenfilename(initialdir=WORKING_DIRECTORY,
                            filetypes =(("Excel File", "*.xlsx"),("All Files","*.*")),
                            title = "Choose a file."
@@ -37,6 +40,9 @@ def close_app():
 
 
 def run_app():
+    """Gathers the user inputs and calls VocabChecker
+
+    """
     myLabel.config(text = "getting user inputs")
     # validate inputs
     try:
@@ -61,13 +67,13 @@ def run_app():
         return
     
     myLabel.config(text = "file: " + user_file_name)
-    results = vm.run_vocab_match(user_file_name, user_threshold, user_max_matches)
+    results = VocabChecker.run_vocab_match(user_file_name, user_threshold, user_max_matches)
     #print(results.head())
     directory = os.path.split(user_file_name)[0]
     #print(directory)
     result_file = directory + "/" + RESULT_FILE_NAME
     myLabel.config(text = "Writing results to " + result_file)
-    vm.save_as_xl(results, result_file)
+    VocabChecker.save_as_xl(results, result_file)
 
 # main program
 window = tk.Tk() 
