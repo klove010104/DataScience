@@ -8,7 +8,7 @@ an Excel with columns 'TABLE NAME' and 'COLUMN NAME'.
 
   Typical usage example:
 
-  results = run_vocab_match('ColumnsToMatch.xlsx', 70, 40 )
+  results = run_vocab_match('ColumnsToMatch.xlsx', 70, 40 ) \n
   save_as_xl(results)
 
 Created on Sun Feb 14 13:15:59 2021
@@ -33,14 +33,12 @@ def load_xl_df(input_file_name):
     df = pd.read_excel(input_file_name)
     return df
 
-# Save dataframe as excel
 def save_as_xl(result_df, result_name=RESULT_FILE_NAME):
     """Saves DataFrame to Excel
     
     """    
     result_df.to_excel(result_name)
 
-# use unique list for further processing
 def get_target_vocab(df_column):
     """Creates a sorted, unique list of target words
 
@@ -118,16 +116,15 @@ def get_top_match(matches):
     if len(matches) == 0:
         top_score = 0
         top_term = 'no matches'
-    else:
+    if len(matches) > 1:
         top_score = matches[0][1]
         top_term = matches[0][0]
-    if len(matches) > 1:
         if matches[1][1] == top_score:
             top_term = 'multiple matches'
     return (top_term, top_score)
 
 def match_vocab(inputDf, vocab, threshold, max_matches):
-    """Matches each term in inputDf to standard vocab.
+    """Matches each term in inputDf to standard vocab
 
     Loops through input and runs the match, then returns a dataframe with
     the results.
