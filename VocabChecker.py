@@ -24,20 +24,6 @@ import stringcase
 MASTER_VOCAB_FILE_NAME = 'C:/Users/klove/Downloads/CoreAttributes.xlsx'
 RESULT_FILE_NAME = 'Matched_Vocab.xlsx'
 
-def load_xl_df(input_file_name):
-    """Loads an Excel into a DataFrame.
-    
-        Assumes that either file is in current directory, or it's 
-        fully qualified
-    """
-    df = pd.read_excel(input_file_name)
-    return df
-
-def save_as_xl(result_df, result_name=RESULT_FILE_NAME):
-    """Saves DataFrame to Excel
-    
-    """    
-    result_df.to_excel(result_name)
 
 def get_target_vocab(df_column):
     """Creates a sorted, unique list of target words
@@ -75,7 +61,7 @@ def create_input_vocab(input_file_name):
     return target_names
 
 
-def match_to_target(inputword, target_names, threshold, max_matches):
+def match_to_target(input_word, target_names, threshold, max_matches):
     """Matches single word to vocabulary - returns list of tuples
 
     Uses fuzzy matching to compare a single word to a list of candidate 
@@ -83,7 +69,7 @@ def match_to_target(inputword, target_names, threshold, max_matches):
     matches) scoring >= threshold.
 
     Args:
-        inputword: the word to find a match for
+        input_word: the word to find a match for
         target_names: a list with the standard vocabulary
         threshold: an integer representing the lowest score for a match
         max_matches: an integer representing the most matches to keep
@@ -97,13 +83,11 @@ def match_to_target(inputword, target_names, threshold, max_matches):
     """
     matches = []
     score_col = 1
-    for match in process.extract(inputword, target_names, limit=max_matches):
+    for match in process.extract(input_word, target_names, limit=max_matches):
         if match[score_col] > threshold:
             matches.append(match)
     return matches    
 
-# take input of match tuples, and return a tuple of the best match
-# if multiple with top score, put word "multiple"
 def get_top_match(matches):
     """From the list of matches, returns tuple of the highest score match.
 
@@ -111,32 +95,39 @@ def get_top_match(matches):
     from the first row. If there are no matches, returns tuple 
     ('no matches', 0). If there are multiple matches with same top score, 
     returns tuple ('multiple matches', top score)
+    
+    Args:
+        matches: a list of tuples (match word, score)
+        
+    Returns:
+        single tuple in form of (top match, top score)
 
     """
-    if len(matches) == 0:
-        top_score = 0
-        top_term = 'no matches'
-    if len(matches) > 1:
+    top_score = 0
+    top_term = 'no matches'
+    
+    if len(matches) >= 1:
         top_score = matches[0][1]
         top_term = matches[0][0]
-        if matches[1][1] == top_score:
-            top_term = 'multiple matches'
+        if len(matches) > 1:
+            if matches[1][1] == top_score:
+                top_term = 'multiple matches'
     return (top_term, top_score)
 
-def match_vocab(inputDf, vocab, threshold, max_matches):
-    """Matches each term in inputDf to standard vocab
+def match_vocab(input_df, vocab, threshold, max_matches):
+    """Matches each term in input_df to standard vocab
 
     Loops through input and runs the match, then returns a dataframe with
     the results.
 
     Args:
-        inputDf: the original dataframe loaded from user input
+        input_df: the original dataframe loaded from user input
         vocab: the standardized vocabulary list
         threshold: an integer representing the lowest score for a match
         max_matches: an integer representing the most matches to keep
 
     Returns:
-        outputDf: a dataframe with below columns:
+        output_df: a dataframe with below columns:
             "Orig Table Name", "Orig Column Name","Best Match Term",
             "Best Match Score", "Top Matches"
 
@@ -147,7 +138,7 @@ def match_vocab(inputDf, vocab, threshold, max_matches):
                               "Best Match Term","Best Match Score", 
                               "Top Matches" ] )
 
-    for tbl, term in zip(inputDf['Table Name'],inputDf['Column Name']): 
+    for tbl, term in zip(input_df['Table Name'],input_df['Column Name']): 
         term_matches = match_to_target(term, vocab, threshold, max_matches);
         top_term_tuple = get_top_match(term_matches)
         values_to_add = {'Orig Table Name': tbl, 
@@ -160,7 +151,40 @@ def match_vocab(inputDf, vocab, threshold, max_matches):
         output_df = output_df.append(row_to_add)
     return output_df
 
-# returns a dataframe with the matched values
+def is_dd_format(input_df):
+    """Checks to see if input file has expected data dictionary format
+    
+        Args:
+            input_df: DataFrame to check
+        
+        Returns:
+            True if 
+                the DataFrame has at least these columns:'MODEL NAME', 
+                    'TABLE BUSINESS NAME', 'COLUMN BUSINESS NAME',
+                    'COLUMN BUSINESS DEFINITION'
+                the DataFrame has at least 1 observation (row)
+    """ 
+    return False
+
+# =============================================================================
+#  public facing functions below here. maybe I'll create a class sometime
+# 
+# =============================================================================
+def load_xl_df(input_file_name):
+    """Loads an Excel into a DataFrame.
+    
+        Assumes that either file is in current directory, or it's 
+        fully qualified
+    """
+    df = pd.read_excel(input_file_name)
+    return df
+
+def save_as_xl(result_df, result_name=RESULT_FILE_NAME):
+    """Saves DataFrame to Excel
+    
+    """    
+    result_df.to_excel(result_name)
+
 def run_vocab_match(input_file_name, threshold, max_matches, 
                     vocab_file_name = MASTER_VOCAB_FILE_NAME):
     """Matches terms in an input file to a vocabulary and returns dataframe.
@@ -182,11 +206,41 @@ def run_vocab_match(input_file_name, threshold, max_matches,
 
     """
     vocab = create_input_vocab(vocab_file_name)
-    toMatchDf = load_xl_df(input_file_name)
-    toMatchDf = toMatchDf.dropna(subset=['Column Name'])
-    result_df = match_vocab(toMatchDf, vocab, threshold, max_matches)
+    to_match_df = load_xl_df(input_file_name)
+    to_match_df = to_match_df.dropna(subset=['Column Name'])
+    result_df = match_vocab(to_match_df, vocab, threshold, max_matches)
     return result_df
 
+def score_data_dictionary(input_file_name):
+    """Scores data dictionary for inconsistencies and missing values.
+    
+        Examine the input data dictionary and score each attribute:
+            0 if the definition is missing
+            1 if there's another attribute with same name different definition
+            2 if all instances of the attribute have same definition
+        
+        Also return the number of times the attribute name appears.
+        
+        Future enhancement: check for consistency in data types
+        
+        Args:
+            input_file_name: Excel with columns 'MODEL NAME', 
+                'TABLE BUSINESS NAME', 'COLUMN BUSINESS NAME',
+                'COLUMN BUSINESS DEFINITION'
+                
+        Returns:
+            result_df: a dataframe echoing the input columns plus:
+                'DEFINITION SCORE', 'INSTANCE COUNT'
+    
+    """
+    output_df = ''
+    # potential file does not exist
+    input_df = load_xl_df(input_file_name)
+    if(is_dd_format(input_df)):
+        None # TODO (obviously)
+    else:
+        None # TODO - raise exception or describe file format
+    return output_df
 
 # Sample code
 # import os
