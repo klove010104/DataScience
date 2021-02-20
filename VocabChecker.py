@@ -3,8 +3,8 @@
 """Check a list of terms against a standard vocabulary.
 
 The standard vocabulary is specified by an Excel with columns titled
-'COLUMN BUSINESS NAME' and 'TABLE BUSINESS NAME'. The list of terms is 
-an Excel with columns 'TABLE NAME' and 'COLUMN NAME'. 
+'Attribute Name' and 'Entity Name'. The list of terms is 
+an Excel with columns 'Entity Name' and 'Attribute Name'. 
 
   Typical usage example:
 
@@ -41,13 +41,13 @@ def preprocess_input_vocab(input_df):
 
     """
     # TODO handle non-standard format
-    input_df = input_df.dropna(subset=['COLUMN BUSINESS NAME'])
+    input_df = input_df.dropna(subset=['Attribute Name'])
 
     # Standardize and add a column with the standardized names
     # TODO SettingWithCopyWarning
-    input_df['ColumnNameStd'] = input_df['COLUMN BUSINESS NAME'].str.title()
+    input_df['ColumnNameStd'] = input_df['Attribute Name'].str.title()
     # also gives the warning. leaving as comment because lambda is handy
-    # input_df['ColumnNameStd'] = input_df['COLUMN BUSINESS NAME'].apply(lambda x: x.title())
+    # input_df['ColumnNameStd'] = input_df['Attribute Name'].apply(lambda x: x.title())
     return input_df
  
 def create_input_vocab(input_file_name):
@@ -128,21 +128,21 @@ def match_vocab(input_df, vocab, threshold, max_matches):
 
     Returns:
         output_df: a dataframe with below columns:
-            "Orig Table Name", "Orig Column Name","Best Match Term",
+            "Orig Entity Name", "Orig Attribute Name","Best Match Term",
             "Best Match Score", "Top Matches"
 
     """
     term_matches = []
     output_df = pd.DataFrame(columns =
-                             ["Orig Table Name", "Orig Column Name",
+                             ["Orig Entity Name", "Orig Attribute Name",
                               "Best Match Term","Best Match Score", 
                               "Top Matches" ] )
 
-    for tbl, term in zip(input_df['Table Name'],input_df['Column Name']): 
+    for tbl, term in zip(input_df['Entity Name'],input_df['Attribute Name']): 
         term_matches = match_to_target(term, vocab, threshold, max_matches);
         top_term_tuple = get_top_match(term_matches)
-        values_to_add = {'Orig Table Name': tbl, 
-                         'Orig Column Name': term, 
+        values_to_add = {'Orig Entity Name': tbl, 
+                         'Orig Attribute Name': term, 
                          'Best Match Term': top_term_tuple[0], 
                          'Best Match Score': top_term_tuple[1], 
                          'Top Matches': term_matches}
@@ -160,7 +160,7 @@ def is_dd_format(input_df):
         Returns:
             True if 
                 the DataFrame has at least these columns:'MODEL NAME', 
-                    'TABLE BUSINESS NAME', 'COLUMN BUSINESS NAME',
+                    'Entity Name', 'Attribute Name',
                     'COLUMN BUSINESS DEFINITION'
                 the DataFrame has at least 1 observation (row)
     """ 
@@ -193,21 +193,21 @@ def run_vocab_match(input_file_name, threshold, max_matches,
     represented by table_handle.  String keys will be UTF-8 encoded.
 
     Args:
-        input_file_name: Excel with columns 'TABLE NAME' and 'COLUMN NAME'
+        input_file_name: Excel with columns 'Entity Name' and 'Attribute Name'
         threshold: an integer representing the lowest score for a match
         max_matches: an integer representing the most matches to keep
-        vocab: Excel with target terms with columns 'COLUMN BUSINESS NAME' 
-               and 'TABLE BUSINESS NAME'
+        vocab: Excel with target terms with columns 'Attribute Name' 
+               and 'Entity Name'
 
     Returns:
         result_df: a dataframe with below columns:
-            "Orig Table Name", "Orig Column Name","Best Match Term",
+            "Orig Entity Name", "Orig Attribute Name","Best Match Term",
             "Best Match Score", "Top Matches"
 
     """
     vocab = create_input_vocab(vocab_file_name)
     to_match_df = load_xl_df(input_file_name)
-    to_match_df = to_match_df.dropna(subset=['Column Name'])
+    to_match_df = to_match_df.dropna(subset=['Attribute Name'])
     result_df = match_vocab(to_match_df, vocab, threshold, max_matches)
     return result_df
 
@@ -225,7 +225,7 @@ def score_data_dictionary(input_file_name):
         
         Args:
             input_file_name: Excel with columns 'MODEL NAME', 
-                'TABLE BUSINESS NAME', 'COLUMN BUSINESS NAME',
+                'Entity Name', 'Attribute Name',
                 'COLUMN BUSINESS DEFINITION'
                 
         Returns:
@@ -233,13 +233,13 @@ def score_data_dictionary(input_file_name):
                 'DEFINITION SCORE', 'INSTANCE COUNT'
     
     """
-    output_df = ''
+    output_df = pd.DataFrame()
     # potential file does not exist
     input_df = load_xl_df(input_file_name)
     if(is_dd_format(input_df)):
         None # TODO (obviously)
     else:
-        None # TODO - raise exception or describe file format
+        output_df = 'error string' # TODO - raise exception or describe file format
     return output_df
 
 # Sample code

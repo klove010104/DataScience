@@ -69,14 +69,39 @@ def test_score_data_dictionary_inputs():
     create_test_xl('Missing Definition')
     assert(vc.score_data_dictionary('MissingDef.xlsx') == expected)
 
-    
-def test_score_data_dictionary():
-    '''unit tests for score_data_dictionary
+
+def test_score_data_dictionary_out():
+    '''unit tests for score_data_dictionary output format
         
     Output file format tests:
         check if all output columns are present
         check if every row has a score
         check if every row has a count
+        check if all Definition Scores are between 0 and 2
+        check if all Instance Counts are > 0
+    
+    '''
+    input_df = create_test_xl("default")
+    input_df.to_excel("default.xlsx")
+    output_df = vc.score_data_dictionary("default.xlsx")
+    column_names = ['Model Name',  'Entity Name', 
+                     'Attribute Name', 'Definition Score',
+                     'Instance Count', 'Random Attribute 1', 'xtra column2',
+                     'Definition Score', 'Instance Count']  
+    assert(type(output_df) == pd.DataFrame)
+    assert(output_df.shape[1] == len(column_names))
+    assert(output_df.columns == column_names)
+    assert(output_df['Definition Score'].notnull().all())
+    assert(output_df['Instance Count'].notnull().all())
+    assert((output_df['Definition Score'] >= 0).all())
+    assert((output_df['Definition Score'] <=2 ).all())
+    assert((output_df['Instance Count'] > 0).all())
+
+def test_score_data_dictionary():
+    '''unit tests for score_data_dictionary
+    
+    Excel input file with test data : DDScoreTest
+    Excel file with expected output : DDScoreTestExpected
     
     Tests for attribute count:
         input file only has 1 row (attribute count =1, score = 2)
@@ -89,32 +114,30 @@ def test_score_data_dictionary():
         two columns same name, definitions mismatch - score 1
         three columns same name, all mismatch - score 1
         three columns same name, two same, one different - score 1
-        column only appears once in dataset, single scenario - score 2
+        column only appears once in dataset, single row scenario - score 2
         column only appears once in dataset, multiple scenario - score 2
     '''
-# =============================================================================
-#     column_names = ['MODEL NAME',  'TABLE BUSINESS NAME', 
-#                     'COLUMN BUSINESS NAME', 'DEFINITION SCORE',
-#                     'INSTANCE COUNT']  
-# =============================================================================
-    assert(False)
+    expected_df = pd.read_excel("C:\\Users\klove\\OneDrive\\Documents\\GitHub\\DataScience\\tests\\DDScoreTestExpected.xlsx")
+    result_df = vc.score_data_dictionary("C:\\Users\\klove\\OneDrive\\Documents\\GitHub\\DataScience\\tests\\DDScoreTest.xlsx")
+    assert(type(result_df) == pd.DataFrame)
+    assert( result_df.equals(expected_df))
 
 def add_input_row (model_name, table_name, column_name, dfn, extra1, 
                    extra2, rowlbl) :
-    values_to_add = {'MODEL NAME': model_name, 
-                      'TABLE BUSINESS NAME': table_name, 
-                      'COLUMN BUSINESS NAME': column_name, 
-                      'COLUMN BUSINESS DEFINITION': dfn,
-                      'random column 1': extra1, 
+    values_to_add = {'Model Name': model_name, 
+                      'Entity Name': table_name, 
+                      'Attribute Name': column_name, 
+                      'Attribute Definition': dfn,
+                      'Random Attribute 1': extra1, 
                       'xtra column2': extra2}
     row_to_add = pd.Series(values_to_add, name = rowlbl)
     return row_to_add
         
 def create_test_xl(scenario):
     os.chdir(WORKING_DIRECTORY)
-    column_names = ['MODEL NAME',  'TABLE BUSINESS NAME', 
-                    'COLUMN BUSINESS NAME', 'COLUMN BUSINESS DEFINITION',
-                    'random column 1', 'xtra column2']
+    column_names = ['Model Name',  'Entity Name', 
+                    'Attribute Name', 'Attribute Definition',
+                    'Random Attribute 1', 'xtra column2']
     row1 = add_input_row('model1','table1','attribute1','number one is best',
                          'blue','Goofy','row1')
     df = pd.DataFrame()
@@ -127,23 +150,50 @@ def create_test_xl(scenario):
         df = pd.DataFrame(columns = column_names)
         df = df.append(row1)        
         if scenario == 'Missing Model':
-            column_names.remove('MODEL NAME')
+            column_names.remove('Model Name')
             df = pd.DataFrame(columns = column_names)
             df.to_excel('MissingModel.xlsx')
         elif scenario == 'Missing Table':
-            column_names.remove('TABLE BUSINESS NAME')
+            column_names.remove('Entity Name')
             df = pd.DataFrame(columns = column_names)
             df.to_excel('MissingTable.xlsx')
         elif scenario == 'Missing Column':
-            column_names.remove('COLUMN BUSINESS NAME')
+            column_names.remove('Attribute Name')
             df = pd.DataFrame(columns = column_names)
             df.to_excel('MissingColumn.xlsx')
         elif scenario == 'Missing Definition':
-            column_names.remove('COLUMN BUSINESS DEFINITION')
+            column_names.remove('Attribute Definition')
             df = pd.DataFrame(columns = column_names)
             df.to_excel('MissingDef.xlsx')
+    # default returns df with 1 row
     return df
 
+
+def add_output_row (model_name, table_name, column_name, dfn, extra1, 
+                   extra2, score, inst_cnt, rowlbl) :
+    values_to_add = {'Model Name': model_name, 
+                      'Entity Name': table_name, 
+                      'Attribute Name': column_name, 
+                      'Attribute Definition': dfn,
+                      'Random Attribute 1': extra1, 
+                      'xtra column2': extra2,
+                      'Definition Score': score,
+                      'Instance Count': inst_cnt}
+    row_to_add = pd.Series(values_to_add, name = rowlbl)
+    return row_to_add
+
+def create_output_df(scenario):
+    output_column_names = ['Model Name',  'Entity Name', 
+                     'Attribute Name', 'Definition Score',
+                     'Instance Count', 'Random Attribute 1', 'xtra column2',
+                     'Definition Score', 'Instance Count'] 
+    df = pd.DataFrame(output_column_names)    
+    row1 = add_output_row('model1','table1','attribute1','number one is best',
+                         'blue','Goofy', 2, 1, 'row1')
+    df.append(row1)
+    return df
+    
+    
 def remove_file(file_name):
     if os.path.exists('file_name'):
         os.remove('file_name') 
@@ -156,3 +206,4 @@ def cleanup():
     remove_file('MissingTable.xlsx')
     remove_file('MissingColumn.xlsx')
     remove_file('MissingDef.xlsx')
+    remove_file('default.xlsx')
