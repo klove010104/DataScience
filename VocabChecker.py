@@ -163,8 +163,12 @@ def is_dd_format(input_df):
                     'Entity Name', 'Attribute Name',
                     'COLUMN BUSINESS DEFINITION'
                 the DataFrame has at least 1 observation (row)
-    """ 
-    return False
+    """  
+    required_cols = ['Model Name','Entity Name', 'Attribute Name', 
+                          'Attribute/Column Definition']
+    hascols= set(input_df.columns).intersection(required_cols) == required_cols
+    hasarow = not input_df.empty
+    return hascols & hasarow
 
 # =============================================================================
 #  public facing functions below here. maybe I'll create a class sometime
@@ -239,7 +243,8 @@ def score_data_dictionary(input_file_name):
     if(is_dd_format(input_df)):
         None # TODO (obviously)
     else:
-        output_df = 'error string' # TODO - raise exception or describe file format
+        output_df = 'Input File must have all required columns and at least 1 row'
+        # TODO consider raising exception
     return output_df
 
 # Sample code

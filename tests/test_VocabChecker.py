@@ -11,6 +11,8 @@ import pandas as pd
 import os
 
 WORKING_DIRECTORY = 'C:/Users/klove/Downloads/'
+REQUIRED_INPUT_COLUMNS = ['Model Name','Entity Name', 'Attribute Name', 
+                          'Attribute/Column Definition']
 
 def test_get_top_match():
     # if there are no matches
@@ -84,10 +86,10 @@ def test_score_data_dictionary_out():
     input_df = create_test_xl("default")
     input_df.to_excel("default.xlsx")
     output_df = vc.score_data_dictionary("default.xlsx")
-    column_names = ['Model Name',  'Entity Name', 
-                     'Attribute Name', 'Definition Score',
-                     'Instance Count', 'Random Attribute 1', 'xtra column2',
-                     'Definition Score', 'Instance Count']  
+    column_names = REQUIRED_INPUT_COLUMNS + ['Random Attribute 1', 
+                                             'xtra column2',
+                                             'Definition Score', 
+                                             'Instance Count']  
     assert(type(output_df) == pd.DataFrame)
     assert(output_df.shape[1] == len(column_names))
     assert(output_df.columns == column_names)
@@ -135,9 +137,8 @@ def add_input_row (model_name, table_name, column_name, dfn, extra1,
         
 def create_test_xl(scenario):
     os.chdir(WORKING_DIRECTORY)
-    column_names = ['Model Name',  'Entity Name', 
-                    'Attribute Name', 'Attribute Definition',
-                    'Random Attribute 1', 'xtra column2']
+    column_names = REQUIRED_INPUT_COLUMNS + ['Random Attribute 1', 
+                                             'xtra column2']
     row1 = add_input_row('model1','table1','attribute1','number one is best',
                          'blue','Goofy','row1')
     df = pd.DataFrame()
@@ -162,37 +163,11 @@ def create_test_xl(scenario):
             df = pd.DataFrame(columns = column_names)
             df.to_excel('MissingColumn.xlsx')
         elif scenario == 'Missing Definition':
-            column_names.remove('Attribute Definition')
+            column_names.remove('Attribute/Column Definition')
             df = pd.DataFrame(columns = column_names)
             df.to_excel('MissingDef.xlsx')
     # default returns df with 1 row
     return df
-
-
-def add_output_row (model_name, table_name, column_name, dfn, extra1, 
-                   extra2, score, inst_cnt, rowlbl) :
-    values_to_add = {'Model Name': model_name, 
-                      'Entity Name': table_name, 
-                      'Attribute Name': column_name, 
-                      'Attribute Definition': dfn,
-                      'Random Attribute 1': extra1, 
-                      'xtra column2': extra2,
-                      'Definition Score': score,
-                      'Instance Count': inst_cnt}
-    row_to_add = pd.Series(values_to_add, name = rowlbl)
-    return row_to_add
-
-def create_output_df(scenario):
-    output_column_names = ['Model Name',  'Entity Name', 
-                     'Attribute Name', 'Definition Score',
-                     'Instance Count', 'Random Attribute 1', 'xtra column2',
-                     'Definition Score', 'Instance Count'] 
-    df = pd.DataFrame(output_column_names)    
-    row1 = add_output_row('model1','table1','attribute1','number one is best',
-                         'blue','Goofy', 2, 1, 'row1')
-    df.append(row1)
-    return df
-    
     
 def remove_file(file_name):
     if os.path.exists('file_name'):
