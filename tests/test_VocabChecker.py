@@ -10,7 +10,7 @@ import VocabChecker as vc
 import pandas as pd
 import os
 
-WORKING_DIRECTORY = 'C:/Users/klove/Downloads/'
+WORKING_DIRECTORY = 'C:\\Users\\klove\\Downloads\\'
 REQUIRED_INPUT_COLUMNS = ['Model Name','Entity Name', 'Attribute Name', 
                           'Attribute/Column Definition']
 
@@ -85,18 +85,20 @@ def test_score_data_dictionary_out():
     '''
     input_df = create_test_xl("default")
     input_df.to_excel("default.xlsx")
-    output_df = vc.score_data_dictionary("default.xlsx")
     column_names = REQUIRED_INPUT_COLUMNS + ['Random Attribute 1', 
                                              'xtra column2',
                                              'Definition Score', 
                                              'Instance Count']  
+    output_df = vc.score_data_dictionary("default.xlsx")
+    print(output_df)
     assert(type(output_df) == pd.DataFrame)
-    assert(output_df.shape[1] == len(column_names))
-    assert(output_df.columns == column_names)
+    assert(output_df.shape[1] == len(column_names) + 1)
+    output_cols = list(output_df.columns[1:])
+    assert(output_cols == column_names)
     assert(output_df['Definition Score'].notnull().all())
-    assert(output_df['Instance Count'].notnull().all())
     assert((output_df['Definition Score'] >= 0).all())
     assert((output_df['Definition Score'] <=2 ).all())
+    assert(output_df['Instance Count'].notnull().all())
     assert((output_df['Instance Count'] > 0).all())
 
 def test_score_data_dictionary():
@@ -129,7 +131,7 @@ def add_input_row (model_name, table_name, column_name, dfn, extra1,
     values_to_add = {'Model Name': model_name, 
                       'Entity Name': table_name, 
                       'Attribute Name': column_name, 
-                      'Attribute Definition': dfn,
+                      'Attribute/Column Definition': dfn,
                       'Random Attribute 1': extra1, 
                       'xtra column2': extra2}
     row_to_add = pd.Series(values_to_add, name = rowlbl)
@@ -170,15 +172,16 @@ def create_test_xl(scenario):
     return df
     
 def remove_file(file_name):
-    if os.path.exists('file_name'):
-        os.remove('file_name') 
+    if os.path.exists(file_name):
+        os.remove(file_name) 
 
 def cleanup():
     os.chdir(WORKING_DIRECTORY)
-    remove_file('EmptyFile.xlsx')
+    remove_file(WORKING_DIRECTORY + 'EmptyFile.xlsx')
     remove_file('HeadersOnly.xlsx')
     remove_file('MissingModel.xlsx')
     remove_file('MissingTable.xlsx')
     remove_file('MissingColumn.xlsx')
     remove_file('MissingDef.xlsx')
     remove_file('default.xlsx')
+

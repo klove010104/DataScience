@@ -16,7 +16,9 @@ Created on Sun Feb 14 13:15:59 2021
 @author: klove
 """
 
+import math
 import pandas as pd
+import numpy as np
 from fuzzywuzzy import process
 import stringcase
 
@@ -166,9 +168,32 @@ def is_dd_format(input_df):
     """  
     required_cols = ['Model Name','Entity Name', 'Attribute Name', 
                           'Attribute/Column Definition']
-    hascols= set(input_df.columns).intersection(required_cols) == required_cols
+    hascols= set(input_df.columns).intersection(required_cols) == set(required_cols)
     hasarow = not input_df.empty
     return hascols & hasarow
+
+def attribute_count_in_df(input_df, colname = 'Attribute Name'):
+    """Counts how many times an attribute appears in the DataFrame
+       
+    
+    Args:
+            input_df: DataFrame with column colname
+            colname:  column name to count
+        
+    Returns:
+            instance_counts: pandas Series same size/order as df with count of 
+                how many times attribute is in the df
+    """
+    odf = pd.DataFrame( { colname : input_df[colname]})
+    odf['Instance Count'] = 0
+    values = np.array(input_df[colname])
+    (unique, counts) = np.unique(values, return_counts=True)
+    # now you have to match the counts back to the df
+    i = 0
+    for attribute_name in unique:
+        odf['Instance Count'].where(~(odf[colname] == attribute_name), other=counts[i], inplace=True)
+        i+=1
+    return odf['Instance Count']
 
 # =============================================================================
 #  public facing functions below here. maybe I'll create a class sometime
@@ -228,20 +253,23 @@ def score_data_dictionary(input_file_name):
         Future enhancement: check for consistency in data types
         
         Args:
-            input_file_name: Excel with columns 'MODEL NAME', 
-                'Entity Name', 'Attribute Name',
-                'COLUMN BUSINESS DEFINITION'
+            input_file_name: Excel with columns 'Model Name','Entity Name', 
+                'Attribute Name', 'Attribute/Column Definition'
                 
         Returns:
             result_df: a dataframe echoing the input columns plus:
-                'DEFINITION SCORE', 'INSTANCE COUNT'
+                        'Definition Score', 'Instance Count'
     
     """
     output_df = pd.DataFrame()
     # potential file does not exist
     input_df = load_xl_df(input_file_name)
     if(is_dd_format(input_df)):
-        None # TODO (obviously)
+        output_df = input_df.copy()
+        # score all rows with missing attribute definition as 0
+        output_df['Definition Score'] = \
+            np.where(output_df['Attribute/Column Definition'].isna(), 0, math.nan)
+        output_df['Instance Count'] = attribute_count_in_df(input_df)
     else:
         output_df = 'Input File must have all required columns and at least 1 row'
         # TODO consider raising exception
