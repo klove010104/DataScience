@@ -124,8 +124,15 @@ def test_score_data_dictionary():
     expected_df = pd.read_excel("C:\\Users\klove\\OneDrive\\Documents\\GitHub\\DataScience\\tests\\DDScoreTestExpected.xlsx")
     result_df = vc.score_data_dictionary("C:\\Users\\klove\\OneDrive\\Documents\\GitHub\\DataScience\\tests\\DDScoreTest.xlsx")
     assert(type(result_df) == pd.DataFrame)
-    assert( result_df.equals(expected_df))
+    assert((result_df['Definition Score'] == expected_df['Definition Score']).all())
+    assert(result_df['Instance Count'] == expected_df['Instance Count']).all()
+   # assert( result_df.equals(expected_df)) This works but leaves me wondering
 
+def diagnose_failure(result_df, expected_df):
+    mismatches = result_df['Definition Score'] != expected_df['Definition Score']
+    mismatched = result_df[mismatches]
+    return mismatched
+    
 def add_input_row (model_name, table_name, column_name, dfn, extra1, 
                    extra2, rowlbl) :
     values_to_add = {'Model Name': model_name, 

@@ -172,6 +172,51 @@ def is_dd_format(input_df):
     hasarow = not input_df.empty
     return hascols & hasarow
 
+
+def score_definitions(input_df):
+    """For each attribute, scores how well definitions match in dataset
+    
+        Examine the input data dictionary and score each attribute:
+            0 if the definition is missing
+            1 if there's another attribute with same name different definition
+            2 if all instances of the attribute have same definition    
+
+        Args:
+            input_df: DataFrame to check
+        
+        Returns:  
+            attribute_scores: pandas Series same size/order as df with score
+    """
+    colname = 'Attribute Name'
+    defname = 'Attribute/Column Definition'
+    odf = pd.DataFrame( { colname : input_df[colname],
+                          defname : input_df[defname]})
+    odf['Definition Score'] = -1
+    unique = input_df['Attribute Name'].unique()
+    # now you have to match the counts back to the df
+    score = []
+    for attribute_name in unique:
+        # find all the rows where this attribute appears
+        these = input_df.loc[lambda input_df: input_df['Attribute Name'] == 
+                             attribute_name]
+        # if the definitions match, there will be 1 unique value
+        if these[defname].nunique() == 1:
+            score.append(2)
+        else:
+            score.append(1)
+    # now you have to match the scores back to the df
+    i = 0
+    for attribute_name in unique:
+        odf['Definition Score'].where(~((odf[colname] == attribute_name
+                                         )), 
+                                      other=score[i], inplace=True)
+        i+=1  
+    #  score for rows with missing attribute definition to 0
+    odf['Definition Score'] = np.where(odf[defname].isna(), 0, odf['Definition Score'])
+    return odf['Definition Score']
+ 
+    
+    
 def attribute_count_in_df(input_df, colname = 'Attribute Name'):
     """Counts how many times an attribute appears in the DataFrame
        
@@ -266,9 +311,9 @@ def score_data_dictionary(input_file_name):
     input_df = load_xl_df(input_file_name)
     if(is_dd_format(input_df)):
         output_df = input_df.copy()
-        # score all rows with missing attribute definition as 0
-        output_df['Definition Score'] = \
-            np.where(output_df['Attribute/Column Definition'].isna(), 0, math.nan)
+        output_df['Definition Score'] = score_definitions(input_df)
+        # find the attributes where every definition matches and score 2
+        # find attributes where some definitions do not match and score 1
         output_df['Instance Count'] = attribute_count_in_df(input_df)
     else:
         output_df = 'Input File must have all required columns and at least 1 row'
