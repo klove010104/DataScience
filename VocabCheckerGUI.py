@@ -6,8 +6,9 @@ max matches for comparing to the standard vocabulary. Note the standard
 vocabulary is obfuscated in the controller class VocabChecker.
 
   input file 
-      Excel file with columns 'Table Name' and 'Column Name'
-      rows with blank Column Names will be skipped
+      Excel file with columns 'Entity Name' and 'Attribute Name'
+      and 'Attribute/Column Definition' (TODO not used)
+      rows with blank Attribute Names will be dropped
   output file
       Excel file in the same directory as the input file
 
@@ -73,7 +74,7 @@ def run_app():
     #print(directory)
     result_file = directory + "/" + RESULT_FILE_NAME
     myLabel.config(text = "Writing results to " + result_file)
-    VocabChecker.save_as_xl(results, result_file)
+    results.to_excel(result_file)
 
 # main program
 window = tk.Tk() 
