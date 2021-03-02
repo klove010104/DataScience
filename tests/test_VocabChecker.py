@@ -14,6 +14,23 @@ WORKING_DIRECTORY = 'C:\\Users\\klove\\Downloads\\'
 REQUIRED_INPUT_COLUMNS = ['Model Name','Entity Name', 'Attribute Name', 
                           'Attribute/Column Definition']
 
+def test_preprocess():
+    test_df = pd.read_excel(WORKING_DIRECTORY + 'VocabMatcherTests.xlsx')
+    test_case_df = test_df[test_df['Model Name']=='TestPreprocess']
+    result_df = vc.preprocess_df(test_case_df)
+    assert( list(result_df['Attribute Name']) ==list(test_case_df['Expected Attribute']))
+
+def test_match_vocab():
+    test_df = pd.read_excel(WORKING_DIRECTORY + 'VocabMatcherIntTests.xlsx')
+    test_cases_df = test_df[test_df['Model Name']=='TestMatchVocab']
+    match_file_name = WORKING_DIRECTORY + 'VocabMatcherIntTests.xlsx'
+    vocab_file_name = WORKING_DIRECTORY + 'VocabMatcherIntTests.xlsx'
+    translator_file_name = WORKING_DIRECTORY + 'File_Util_TransformDD_Test.xlsx'
+    result_df = vc.run_vocab_match(match_file_name, 90, 5, vocab_file_name, translator_file_name )
+    results = list(result_df['Attribute Name'])
+    expected = list(test_cases_df['Expected Attribute'])
+    assert(results == expected ) 
+    
 def test_get_top_match():
     # if there are no matches
     matches = []
