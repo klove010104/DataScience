@@ -44,7 +44,11 @@ def replace_at_end(target, old_val, new_val):
     
     replace_at_end(attribute, 'id', 'Identifier')
     """
-    expr = old_val + '$'
+    if len(target) == len(old_val):
+        expr = old_val + '$'
+    else:
+        expr = ' ' +  old_val + '$'
+        new_val = ' ' + new_val
     replaced = re.sub(expr, new_val, target, flags=re.IGNORECASE)
     return replaced
 

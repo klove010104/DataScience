@@ -168,7 +168,7 @@ def is_dd_format(input_df):
     return hascols & hasarow
 
 
-def score_definitions(input_df):
+def score_definitions(input_df, colname = ATTRIBUTE_COL, defname = ATT_DEFN_COL):
     '''For each attribute, scores how well definitions match in dataset
     
         Examine the input data dictionary and score each attribute:
@@ -182,18 +182,16 @@ def score_definitions(input_df):
         Returns:  
             attribute_scores: pandas Series same size/order as df with score
     '''
-    colname = 'Attribute Name'
-    defname = 'Attribute/Column Definition'
     odf = pd.DataFrame( { colname : input_df[colname],
                           defname : input_df[defname]})
     odf['Definition Score'] = -1
-    unique = input_df['Attribute Name'].unique()
+    unique = input_df[colname].unique()
     # now you have to match the counts back to the df
     score = []
-    for attribute_name in unique:
+    for name_col in unique:
         # find all the rows where this attribute appears
-        these = input_df.loc[lambda input_df: input_df['Attribute Name'] == 
-                             attribute_name]
+        these = input_df.loc[lambda input_df: input_df[colname] == 
+                             name_col]
         # if the definitions match, there will be 1 unique value
         if these[defname].nunique() == 1:
             score.append(2)
@@ -201,13 +199,14 @@ def score_definitions(input_df):
             score.append(1)
     # now you have to match the scores back to the df
     i = 0
-    for attribute_name in unique:
-        odf['Definition Score'].where(~((odf[colname] == attribute_name
+    for name_col in unique:
+        odf['Definition Score'].where(~((odf[colname] == name_col
                                          )), 
                                       other=score[i], inplace=True)
         i+=1  
     #  score for rows with missing attribute definition to 0
     odf['Definition Score'] = np.where(odf[defname].isna(), 0, odf['Definition Score'])
+    odf['Definition Score'] = np.where((odf[defname] == ""), 0, odf['Definition Score'])
     return odf['Definition Score']
  
     
@@ -230,8 +229,8 @@ def attribute_count_in_df(input_df, colname = 'Attribute Name'):
     (unique, counts) = np.unique(values, return_counts=True)
     # now you have to match the counts back to the df
     i = 0
-    for attribute_name in unique:
-        odf['Instance Count'].where(~(odf[colname] == attribute_name), other=counts[i], inplace=True)
+    for name_col in unique:
+        odf['Instance Count'].where(~(odf[colname] == name_col), other=counts[i], inplace=True)
         i+=1
     return odf['Instance Count']
 

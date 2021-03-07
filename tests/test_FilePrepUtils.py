@@ -9,10 +9,10 @@ import pandas as pd
 import FilePrepUtils as fp
 
 WORKING_DIRECTORY = 'C:\\Users\\klove\\Downloads\\'
-
+GITHUB_TEST_DIR = "C:\\Users\\klove\\OneDrive\\Documents\\GitHub\\DataScience\\tests\\"
 
 def test_replace_at_beginning():
-    test_df = pd.read_excel(WORKING_DIRECTORY + 'VocabMatcherTests.xlsx')
+    test_df = pd.read_excel(GITHUB_TEST_DIR + 'VocabMatcherTests.xlsx')
     test_cases_df = test_df[test_df['Model Name']=='TestFindBegin']
     
     for ind in test_cases_df.index:
@@ -23,7 +23,7 @@ def test_replace_at_beginning():
         assert(result == test_cases_df['Expected Attribute'][ind])        
 
 def test_replace_at_end():
-    test_df = pd.read_excel(WORKING_DIRECTORY + 'VocabMatcherTests.xlsx')
+    test_df = pd.read_excel(GITHUB_TEST_DIR + 'VocabMatcherTests.xlsx')
     test_cases_df = test_df[test_df['Model Name']=='TestFindEnd']
     
     for ind in test_cases_df.index:
@@ -35,7 +35,7 @@ def test_replace_at_end():
         assert(result == expected ) 
 
 def test_replace_in_middle():
-    test_df = pd.read_excel(WORKING_DIRECTORY + 'VocabMatcherTests.xlsx')
+    test_df = pd.read_excel(GITHUB_TEST_DIR + 'VocabMatcherTests.xlsx')
     test_cases_df = test_df[test_df['Model Name']=='TestMiddle']
     
     for ind in test_cases_df.index:
@@ -47,8 +47,9 @@ def test_replace_in_middle():
         assert(result == expected ) 
 
 def test_find_and_replace():
-    test_df = pd.read_excel(WORKING_DIRECTORY + 'VocabMatcherTests.xlsx')
+    test_df = pd.read_excel(GITHUB_TEST_DIR + 'VocabMatcherTests.xlsx')
     test_cases_df = test_df[test_df['Model Name']=='TestFindReplace']
-    results = fp.find_and_replace(test_cases_df['Attribute Name'],  'File_Util_TransformDD_Test.xlsx')
+    results = fp.find_and_replace(test_cases_df['Attribute Name'], 
+                                  GITHUB_TEST_DIR + 'File_Util_TransformDD_Test.xlsx')
     expected = list(test_cases_df['Expected Attribute'])
     assert(results == expected ) 
